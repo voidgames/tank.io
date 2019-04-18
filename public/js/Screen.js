@@ -1,10 +1,10 @@
-// スクリーンクラス
+// Game画面描画クラス
 class Screen {
-    // コンストラクタ
     constructor(socket, canvas) {
         this.socket = socket;
         this.canvas = canvas;
-        this.context = canvas.getContext( '2d' );
+        // canvas の描画API にアクセスできるオブジェクト(=context)の参照を取得
+        this.context = canvas.getContext('2d');
         this.assets = new Assets();
         this.iProcessingTimeNanoSec = 0;
         // キャンバスの初期化
@@ -13,7 +13,7 @@ class Screen {
         // ソケットの初期化
         this.initSocket();
         // コンテキストの初期化
-        // アンチエイリアスの抑止（画像がぼやけるのの防止）以下４行
+        // アンチエイリアスの抑止（画像がぼやけるのの防止）
         this.context.mozImageSmoothingEnabled = false;
         this.context.webkitImageSmoothingEnabled = false;
         this.context.msImageSmoothingEnabled = false;
@@ -22,21 +22,15 @@ class Screen {
 
     // ソケットの初期化
     initSocket() {
-        // 接続確立時の処理
-        // ・サーバーとクライアントの接続が確立すると、
-        // 　サーバーで、'connection'イベント
-        // 　クライアントで、'connect'イベントが発生する
+        // 接続確立
         this.socket.on('connect', () => {
-            console.log( 'connect : socket.id = %s', socket.id );
-            // サーバーに'enter-the-game'を送信
-            this.socket.emit( 'enter-the-game' );
+            console.log('connect : socket.id = %s', socket.id);
+            this.socket.emit('enter-the-game');
         });
-
-        // サーバーからの状態通知に対する処理
-        // ・サーバー側の周期的処理の「io.sockets.emit( 'update', ・・・ );」に対する処理
+        // サーバー処理時間の更新
         this.socket.on('update', (iProcessingTimeNanoSec) => {
             this.iProcessingTimeNanoSec = iProcessingTimeNanoSec;
-        } );
+        });
     }
 
     // アニメーション（無限ループ処理）
