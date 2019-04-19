@@ -33,4 +33,8 @@ $(document).on('keydown keyup', (event) => {
         // 4. サーバーに送信
         socket.emit('change-my-movement', objMovement);
     }
+    // spaceが押されたらサーバーに'shoot'を送信
+    if(' ' === event.key && 'keydown' === event.type) {
+        socket.emit('shoot');
+    }
 });

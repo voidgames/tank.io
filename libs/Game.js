@@ -28,10 +28,15 @@ module.exports = class Game {
                 console.log( 'enter-the-game : socket.id = %s', socket.id );
                 tank = world.createTank(); // 自タンク作成
             } );
-            // クライアント側のキー入力時
+            // クライアント側のキー（移動）入力時
             socket.on('change-my-movement', (objMovement) => {
                 if(!tank) { return; }
                 tank.objMovement = objMovement;	// 動作
+            });
+            // クライアント側のキー（ショット）入力時
+            socket.on('shoot', () => {
+                if(!tank) { return; }
+                world.createBullet(tank);	// ショット
             });
         });
 
@@ -50,7 +55,9 @@ module.exports = class Game {
             // 最新状況をクライアントに送信
             io.emit('update', 
                 Array.from(world.setTank),
-                Array.from(world.setWall), iNanosecDiff);	// 送信
+                Array.from(world.setWall),
+                Array.from(world.setBullet), iNanosecDiff);	// 送信
+
         }, 1000 / GameSettings.FRAMERATE);	// 単位は[ms]。1000[ms] / FRAMERATE[回]
     }
 }

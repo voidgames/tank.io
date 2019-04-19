@@ -15,6 +15,7 @@ module.exports = class World {
         this.io = io;   // socketIO
         this.setTank = new Set();	// タンクセット ※SetクラスはES6の機能
         this.setWall = new Set();	// 壁セット
+        this.setBullet = new Set();	// 弾丸リスト
         // ランダムに壁を生成
         for(let i=0; i < GameSettings.WALL_COUNT; i++) {
             // ランダム座標値の作成
@@ -47,9 +48,26 @@ module.exports = class World {
             fRight: SharedSettings.FIELD_WIDTH  - SharedSettings.TANK_WIDTH  * 0.5,
             fTop:   SharedSettings.FIELD_HEIGHT - SharedSettings.TANK_HEIGHT * 0.5
         };
-
+        // 各タンク処理
         this.setTank.forEach((tank) => {
             tank.update(fDeltaTime, rectTankField, this.setWall);
+        });
+
+        // 弾丸の可動域
+        const rectBulletField = {
+            fLeft:   0 + SharedSettings.BULLET_WIDTH  * 0.5,
+            fBottom: 0 + SharedSettings.BULLET_HEIGHT * 0.5,
+            fRight: SharedSettings.FIELD_WIDTH  - SharedSettings.BULLET_WIDTH  * 0.5,
+            fTop:   SharedSettings.FIELD_HEIGHT - SharedSettings.BULLET_HEIGHT * 0.5
+        };
+        // 各弾丸処理
+        this.setBullet.forEach((bullet) => {
+            // 前進した後、消失判定が返ってくる
+            const bDisappear = bullet.update(fDeltaTime, rectBulletField, this.setWall);
+            // 消失判定有なら消す
+            if(bDisappear) {
+                this.destroyBullet(bullet);
+            }
         });
     }
 
@@ -78,5 +96,18 @@ module.exports = class World {
     // タンクの破棄
     destroyTank(tank) {
         this.setTank.delete(tank);
+    }
+
+    // 弾丸の生成
+    createBullet(tank) {
+        const bullet = tank.shoot();
+        if(bullet) {
+            this.setBullet.add(bullet);
+        }
+    }
+
+    // 弾丸の破棄
+    destroyBullet(bullet) {
+        this.setBullet.delete(bullet);
     }
 }

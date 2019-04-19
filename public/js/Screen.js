@@ -9,6 +9,7 @@ class Screen {
         this.iProcessingTimeNanoSec = 0;
         this.aTank = null;
         this.aWall = null;
+        this.aBullet = null;
         // キャンバスの初期化
         this.canvas.width = SharedSettings.FIELD_WIDTH;
         this.canvas.height = SharedSettings.FIELD_HEIGHT;
@@ -30,9 +31,10 @@ class Screen {
             this.socket.emit('enter-the-game');
         });
         // サーバーからの定期更新通知
-        this.socket.on('update', (aTank, aWall, iProcessingTimeNanoSec) => {
+        this.socket.on('update', (aTank, aWall, aBullet, iProcessingTimeNanoSec) => {
             this.aTank = aTank;
             this.aWall = aWall;
+            this.aBullet = aBullet;
             this.iProcessingTimeNanoSec = iProcessingTimeNanoSec;
         });
     }
@@ -63,6 +65,12 @@ class Screen {
         if(null !== this.aWall) {
             this.aWall.forEach((wall) => {
                 this.renderWall(wall);
+            });
+        }
+        // 弾丸の描画
+        if(null !== this.aBullet) {
+            this.aBullet.forEach((bullet) => {
+                this.renderBullet(bullet);
             });
         }
         // キャンバスの枠の描画
@@ -126,5 +134,22 @@ class Screen {
             wall.fY - SharedSettings.WALL_HEIGHT * 0.5,// 画像先領域の右上座標（領域中心が、原点になるように指定する）
             SharedSettings.WALL_WIDTH,	// 描画先領域の大きさ
             SharedSettings.WALL_HEIGHT);	// 描画先領域の大きさ
+    }
+
+    renderBullet(bullet) {
+        this.context.save();
+        // 弾丸の座標値に移動
+        this.context.translate(bullet.fX, bullet.fY);
+        // 画像描画
+        this.context.rotate(bullet.fAngle);
+        this.context.drawImage(this.assets.imageItems,
+            this.assets.rectBulletInItemsImage.sx, this.assets.rectBulletInItemsImage.sy,	// 描画元画像の右上座標
+            this.assets.rectBulletInItemsImage.sw, this.assets.rectBulletInItemsImage.sh,	// 描画元画像の大きさ
+            -SharedSettings.BULLET_WIDTH * 0.5,	// 画像先領域の右上座標（領域中心が、原点になるように指定する）
+            -SharedSettings.BULLET_HEIGHT * 0.5,	// 画像先領域の右上座標（領域中心が、原点になるように指定する）
+            SharedSettings.BULLET_WIDTH,	// 描画先領域の大きさ
+            SharedSettings.BULLET_HEIGHT);	// 描画先領域の大きさ
+
+        this.context.restore();
     }
 }

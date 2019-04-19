@@ -1,7 +1,9 @@
 const GameObject = require('./GameObject.js');
+const Bullet = require('./Bullet.js');
+const OverlapTester = require('./OverlapTester.js');
+
 const GameSettings = require('./GameSettings.js');
 const SharedSettings = require('../public/js/SharedSettings.js');
-const OverlapTester = require('./OverlapTester.js');
 
 module.exports = class Tank extends GameObject {
     constructor(rectField, setWall) {
@@ -10,6 +12,7 @@ module.exports = class Tank extends GameObject {
         this.objMovement = {};	// 動作コマンド
         this.fSpeed = GameSettings.TANK_SPEED;    // 速度[m/s]。1frameあたり5進む => 1/30[s] で5進む => 1[s]で150進む。
         this.fRotationSpeed = GameSettings.TANK_ROTATION_SPEED;    // 回転速度[rad/s]。1frameあたり0.1進む => 1/30[s] で0.1進む => 1[s]で3[rad]進む。
+        this.iTimeLastShoot = 0;    // 最終ショット時刻
         // 障害物にぶつからない初期位置の算出
         do {
             this.setPos(rectField.fLeft   + Math.random() * (rectField.fRight - rectField.fLeft),
@@ -71,5 +74,25 @@ module.exports = class Tank extends GameObject {
         }
 
         return bDrived;	// 前後方向の動きがあったかを返す（ボットタンクで使用する）
+    }
+
+    // ショット可否判定、チャージ時間（TANK_WAIT_FOR_NEW_BULLET）はショット不可
+    canShoot() {
+        if(GameSettings.TANK_WAIT_FOR_NEW_BULLET > Date.now() - this.iTimeLastShoot) {
+            return false;
+        }
+        return true;
+    }
+
+    // ショット
+    shoot() {
+        // ショット不可の場合は、nullを返す
+        if(!this.canShoot()) { return null; }
+        // 最終ショット時刻を更新
+        this.iTimeLastShoot = Date.now();
+        // 新しい弾丸の生成（先端から出ているようにするために、幅の半分オフセットした位置に生成する）
+        const fX = this.fX + this.fWidth * 0.5 * Math.cos(this.fAngle);
+        const fY = this.fY + this.fWidth * 0.5 * Math.sin(this.fAngle);
+        return new Bullet(fX, fY, this.fAngle, this);
     }
 }
