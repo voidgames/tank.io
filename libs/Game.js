@@ -48,7 +48,9 @@ module.exports = class Game {
             const hrtimeDiff = process.hrtime(hrtime);
             const iNanosecDiff = hrtimeDiff[0] * 1e9 + hrtimeDiff[1];
             // 最新状況をクライアントに送信
-            io.emit('update', Array.from(world.setTank), iNanosecDiff);	// 送信
+            io.emit('update', 
+                Array.from(world.setTank),
+                Array.from(world.setWall), iNanosecDiff);	// 送信
         }, 1000 / GameSettings.FRAMERATE);	// 単位は[ms]。1000[ms] / FRAMERATE[回]
     }
 }

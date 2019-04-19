@@ -8,6 +8,7 @@ class Screen {
         this.assets = new Assets();
         this.iProcessingTimeNanoSec = 0;
         this.aTank = null;
+        this.aWall = null;
         // キャンバスの初期化
         this.canvas.width = SharedSettings.FIELD_WIDTH;
         this.canvas.height = SharedSettings.FIELD_HEIGHT;
@@ -29,8 +30,9 @@ class Screen {
             this.socket.emit('enter-the-game');
         });
         // サーバーからの定期更新通知
-        this.socket.on('update', (aTank, iProcessingTimeNanoSec) => {
+        this.socket.on('update', (aTank, aWall, iProcessingTimeNanoSec) => {
             this.aTank = aTank;
+            this.aWall = aWall;
             this.iProcessingTimeNanoSec = iProcessingTimeNanoSec;
         });
     }
@@ -52,9 +54,15 @@ class Screen {
         // タンクの描画
         if(null !== this.aTank) {
             const fTimeCurrentSec = iTimeCurrent * 0.001; // iTimeCurrentは、ミリ秒。秒に変換。
-            const iIndexFrame = parseInt( fTimeCurrentSec / 0.2 ) % 2;  // フレーム番号
+            const iIndexFrame = parseInt(fTimeCurrentSec / 0.2) % 2;  // フレーム番号
             this.aTank.forEach((tank) =>{
                 this.renderTank(tank, iIndexFrame);
+            });
+        }
+        // 壁の描画
+        if(null !== this.aWall) {
+            this.aWall.forEach((wall) => {
+                this.renderWall(wall);
             });
         }
         // キャンバスの枠の描画
@@ -107,5 +115,16 @@ class Screen {
         this.context.restore(); // rotate, drawImage前の状態をリストア
 
         this.context.restore(); // translate前の状態をリストア
+    }
+
+    renderWall(wall) {
+        // 画像描画
+        this.context.drawImage(this.assets.imageItems,
+            this.assets.rectWallInItemsImage.sx, this.assets.rectWallInItemsImage.sy,	// 描画元画像の右上座標
+            this.assets.rectWallInItemsImage.sw, this.assets.rectWallInItemsImage.sh,	// 描画元画像の大きさ
+            wall.fX - SharedSettings.WALL_WIDTH * 0.5,// 画像先領域の右上座標（領域中心が、原点になるように指定する）
+            wall.fY - SharedSettings.WALL_HEIGHT * 0.5,// 画像先領域の右上座標（領域中心が、原点になるように指定する）
+            SharedSettings.WALL_WIDTH,	// 描画先領域の大きさ
+            SharedSettings.WALL_HEIGHT);	// 描画先領域の大きさ
     }
 }
