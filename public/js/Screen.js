@@ -21,6 +21,9 @@ class Screen {
         this.context.webkitImageSmoothingEnabled = false;
         this.context.msImageSmoothingEnabled = false;
         this.context.imageSmoothingEnabled = false;
+        // 描画中心座標値
+        this.fCenterX = SharedSettings.FIELD_WIDTH * 0.5;
+        this.fCenterY = SharedSettings.FIELD_HEIGHT * 0.5;
     }
 
     // ソケットの初期化
@@ -63,8 +66,17 @@ class Screen {
                 }
             });
         }
+        // 描画中心座標値
+        if(null !== tankSelf) {   // 自タンク座標値
+            this.fCenterX = tankSelf.fX;
+            this.fCenterY = tankSelf.fY;
+        }
         // キャンバスのクリア
-        this.context.clearRect( 0, 0, canvas.width, canvas.height );
+        this.context.clearRect(0, 0, canvas.width, canvas.height);
+        // 全体を平行移動
+        this.context.save();
+        this.context.translate(this.canvas.width  * 0.5 - this.fCenterX,
+                               this.canvas.height * 0.5 - this.fCenterY);
         // キャンバスの塗りつぶし
         this.renderField();
         // タンクの描画
@@ -87,6 +99,8 @@ class Screen {
                 this.renderBullet(bullet);
             });
         }
+        // 全体を平行移動の終了
+        this.context.restore();
         // キャンバスの枠の描画
         this.context.save(); // strokeRect前の状態
         this.context.strokeStyle = RenderingSettings.FIELD_LINECOLOR;
