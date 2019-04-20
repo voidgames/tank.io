@@ -5,6 +5,7 @@
 // ・ゲーム内の各種要素の生成、破棄を有する
 const Tank = require('./Tank.js');
 const Wall = require('./Wall.js');
+const OverlapTester = require('./OverlapTester.js');
 
 const SharedSettings = require('../public/js/SharedSettings.js');
 const GameSettings = require('./GameSettings.js');
@@ -73,6 +74,25 @@ module.exports = class World {
 
     // 衝突のチェック
     checkCollisions() {
+        // 弾丸ごとの処理
+        this.setBullet.forEach((bullet) => {
+            // タンクごとの処理
+            this.setTank.forEach((tank) => {
+                // 発射元のタンクとの衝突処理はなし
+                if(tank !== bullet.tank) {
+                    // 衝突したらダメージ
+                    if(OverlapTester.overlapRects(tank.rectBound, bullet.rectBound)) {
+                        // ライフ無くなった
+                        if(0 === tank.damage()) {
+                            console.log('dead : socket.id = %s', tank.strSocketID);
+                            this.destroyTank(tank); // タンクの削除
+                        }
+                        this.destroyBullet(bullet);
+                        bullet.tank.iScore++;	// 当てたタンクの得点を加算する
+                    }
+                }
+            });
+        });
     }
 
     // 新たな行動
@@ -80,7 +100,7 @@ module.exports = class World {
     }
 
     // タンクの生成
-    createTank() {
+    createTank(strSocketID) {
         // タンクの可動域
         const rectTankField = {
             fLeft:   0 + SharedSettings.TANK_WIDTH  * 0.5,
@@ -88,7 +108,7 @@ module.exports = class World {
             fRight: SharedSettings.FIELD_WIDTH  - SharedSettings.TANK_WIDTH  * 0.5,
             fTop:   SharedSettings.FIELD_HEIGHT - SharedSettings.TANK_HEIGHT * 0.5
         };
-        const tank = new Tank(rectTankField, this.setWall);
+        const tank = new Tank(strSocketID, rectTankField, this.setWall);
         this.setTank.add(tank);
         return tank;
     }

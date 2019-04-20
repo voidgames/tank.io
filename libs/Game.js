@@ -12,10 +12,12 @@ module.exports = class Game {
         // setInterval()内での参照があるので、スコープを抜けても、生存し続ける（ガーベッジコレクションされない）。
         const world = new World(io);
         let iTimeLast = Date.now();
+
         // クライアント接続時（'connection'イベント）のサーバー側処理
         io.on('connection', (socket) => {
             console.log( 'connection : socket.id = %s', socket.id );
             let tank = null;
+
             // クライアント切断時（'disconnect'イベント）
             socket.on('disconnect', () => {
                 console.log( 'disconnect : socket.id = %s', socket.id );
@@ -23,19 +25,22 @@ module.exports = class Game {
                 world.destroyTank(tank);
                 tank = null;	// 自タンクの解放
             });
+
             // クライアント側の接続確立時
             socket.on('enter-the-game',　() =>　{
                 console.log( 'enter-the-game : socket.id = %s', socket.id );
-                tank = world.createTank(); // 自タンク作成
+                tank = world.createTank(socket.id); // 自タンク作成
             } );
+
             // クライアント側のキー（移動）入力時
             socket.on('change-my-movement', (objMovement) => {
-                if(!tank) { return; }
+                if(!tank || 0 === tank.iLife) { return; }
                 tank.objMovement = objMovement;	// 動作
             });
+
             // クライアント側のキー（ショット）入力時
             socket.on('shoot', () => {
-                if(!tank) { return; }
+                if(!tank || 0 === tank.iLife) { return; }
                 world.createBullet(tank);	// ショット
             });
         });

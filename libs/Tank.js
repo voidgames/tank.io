@@ -6,22 +6,32 @@ const GameSettings = require('./GameSettings.js');
 const SharedSettings = require('../public/js/SharedSettings.js');
 
 module.exports = class Tank extends GameObject {
-    constructor(rectField, setWall) {
+    constructor(strSocketID, rectField, setWall) {
         super( SharedSettings.TANK_WIDTH, SharedSettings.TANK_HEIGHT, 0.0, 0.0, Math.random() * 2 * Math.PI );
 
+        this.strSocketID = strSocketID; // タンクID
         this.objMovement = {};	// 動作コマンド
         this.fSpeed = GameSettings.TANK_SPEED;    // 速度[m/s]。1frameあたり5進む => 1/30[s] で5進む => 1[s]で150進む。
         this.fRotationSpeed = GameSettings.TANK_ROTATION_SPEED;    // 回転速度[rad/s]。1frameあたり0.1進む => 1/30[s] で0.1進む => 1[s]で3[rad]進む。
         this.iTimeLastShoot = 0;    // 最終ショット時刻
+        this.iLife = GameSettings.TANK_LIFE_MAX;    // タンクライフ
+        this.iLifeMax = GameSettings.TANK_LIFE_MAX; // タンク最大ライフ
+        this.iScore = 0;
         // 障害物にぶつからない初期位置の算出
         do {
             this.setPos(rectField.fLeft   + Math.random() * (rectField.fRight - rectField.fLeft),
                         rectField.fBottom + Math.random() * (rectField.fTop   - rectField.fBottom));
         } while(this.overlapWalls(setWall));
 
-        // 初期位置
-        // this.fX = Math.random() * ( SharedSettings.FIELD_WIDTH - SharedSettings.TANK_WIDTH );
-        // this.fY = Math.random() * ( SharedSettings.FIELD_HEIGHT - SharedSettings.TANK_HEIGHT );
+    }
+
+    toJSON() {
+        return Object.assign(super.toJson(), {
+            strSocketID: this.strSocketID,
+            iLife: this.iLife,
+            iLifeMax: this.iLifeMax,
+            iScore: this.iScore,
+        });
     }
 
     update(fDeltaTime, rectField, setWall) {
@@ -32,16 +42,12 @@ module.exports = class Tank extends GameObject {
         // 動作に従って、タンクの状態を更新
         if(this.objMovement['forward']) {	// 前進
             const fDistance = this.fSpeed * fDeltaTime;
-            // this.fX += fDistance * Math.cos(this.fAngle);
-            // this.fY += fDistance * Math.sin(this.fAngle);
             this.setPos(this.fX + fDistance * Math.cos(this.fAngle),
                         this.fY + fDistance * Math.sin(this.fAngle));
             bDrived = true;
         }
         if(this.objMovement['back']) {	// 後進
             const fDistance = this.fSpeed * fDeltaTime;
-            // this.fX -= fDistance * Math.cos(this.fAngle);
-            // this.fY -= fDistance * Math.sin(this.fAngle);
             this.setPos(this.fX - fDistance * Math.cos(this.fAngle),
                         this.fY - fDistance * Math.sin(this.fAngle));
             bDrived = true;
@@ -94,5 +100,11 @@ module.exports = class Tank extends GameObject {
         const fX = this.fX + this.fWidth * 0.5 * Math.cos(this.fAngle);
         const fY = this.fY + this.fWidth * 0.5 * Math.sin(this.fAngle);
         return new Bullet(fX, fY, this.fAngle, this);
+    }
+
+    // ダメージ
+    damage() {
+        this.iLife--;
+        return this.iLife;
     }
 }

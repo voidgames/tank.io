@@ -49,6 +49,16 @@ class Screen {
 
     // 画面の描画。animateから無限に呼び出される
     render(iTimeCurrent) {
+        // 自タンクの取得
+        let tankSelf = null;
+        if(null !== this.aTank) {
+            this.aTank.some((tank) => {
+                if(tank.strSocketID === this.socket.id) {
+                    tankSelf = tank;
+                    return true;
+                }
+            });
+        }
         // キャンバスのクリア
         this.context.clearRect( 0, 0, canvas.width, canvas.height );
         // キャンバスの塗りつぶし
@@ -79,6 +89,14 @@ class Screen {
         this.context.lineWidth = RenderingSettings.FIELD_LINEWIDTH;
         this.context.strokeRect( 0, 0, canvas.width, canvas.height );
         this.context.restore(); // strokeRect前の状態をリストア
+        // 画面左上に得点表示
+        if(null !== tankSelf) {
+            this.context.save();
+            this.context.font = RenderingSettings.SCORE_FONT;
+            this.context.fillStyle = RenderingSettings.SCORE_COLOR;
+            this.context.fillText( 'Score : ' + tankSelf.iScore, 20, 40);
+            this.context.restore();
+        }
         // 画面右上にサーバー処理時間表示
         this.context.save(); 
         this.context.font = RenderingSettings.PROCESSINGTIME_FONT;
@@ -121,6 +139,27 @@ class Screen {
             SharedSettings.TANK_HEIGHT);	    // 描画先領域の大きさ
         
         this.context.restore(); // rotate, drawImage前の状態をリストア
+
+        // ライフ
+        const fLifeCellWidth = SharedSettings.TANK_WIDTH / tank.iLifeMax;
+        const fLifeCellStartX = -(fLifeCellWidth * tank.iLifeMax * 0.5);
+        // ゼロからライフ値まで：REMAINING_COLOR
+        {
+            this.context.fillStyle = RenderingSettings.LIFE_REMAINING_COLOR;
+            this.context.fillRect( fLifeCellStartX,
+                SharedSettings.TANK_WIDTH * 0.5,
+                fLifeCellWidth * tank.iLife,
+                10 );
+        }
+        // ライフ値からライフマックスまで：MISSING_COLOR
+        if(tank.iLife < tank.iLifeMax)
+        {
+            this.context.fillStyle = RenderingSettings.LIFE_MISSING_COLOR;
+            this.context.fillRect( fLifeCellStartX + fLifeCellWidth * tank.iLife,
+                SharedSettings.TANK_WIDTH * 0.5,
+                fLifeCellWidth * ( tank.iLifeMax - tank.iLife ),
+                10 );
+        }
 
         this.context.restore(); // translate前の状態をリストア
     }

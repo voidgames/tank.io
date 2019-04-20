@@ -9,4 +9,10 @@ class RenderingSettings {
     // 処理時間
     static get PROCESSINGTIME_FONT() { return '30px Bold Arial'; }
     static get PROCESSINGTIME_COLOR() { return 'black'; }
+    // ライフ
+    static get LIFE_REMAINING_COLOR() { return 'green'; }
+    static get LIFE_MISSING_COLOR() { return 'red'; }
+    // スコア
+    static get SCORE_FONT() { return '30px Bold Arial'; }
+    static get SCORE_COLOR() { return 'black'; };
 }
