@@ -1,6 +1,7 @@
-// モジュール
 const World = require('./World.js');
-// 設定
+const OverlapTester = require('./OverlapTester.js');
+
+const SharedSettings = require('../public/js/SharedSettings.js');
 const GameSettings = require('./GameSettings.js');
 // ゲームクラス
 // ・ワールドを保持する
@@ -17,11 +18,17 @@ module.exports = class Game {
         io.on('connection', (socket) => {
             console.log( 'connection : socket.id = %s', socket.id );
             let tank = null;
+            // まだゲーム開始前。プレイしていない通信のソケットIDリストに追加
+            world.setNotPlayingSocketID.add(socket.id);
 
             // クライアント切断時（'disconnect'イベント）
             socket.on('disconnect', () => {
                 console.log( 'disconnect : socket.id = %s', socket.id );
-                if(!tank) { return; }
+                if(!tank) {
+                    // プレイしていない通信のソケットIDリストから削除
+                    world.setNotPlayingSocketID.delete(socket.id);
+                    return;
+                }
                 world.destroyTank(tank);
                 tank = null;	// 自タンクの解放
             });
@@ -58,10 +65,38 @@ module.exports = class Game {
             const hrtimeDiff = process.hrtime(hrtime);
             const iNanosecDiff = hrtimeDiff[0] * 1e9 + hrtimeDiff[1];
             // 最新状況をクライアントに送信
-            io.emit('update', 
-                Array.from(world.setTank),
-                Array.from(world.setWall),
-                Array.from(world.setBullet), iNanosecDiff);	// 送信
+            // タンクごとの処理
+            world.setTank.forEach((tank) => {
+                // ボットは無処理
+                if('' !== tank.strSocketID) {
+                    const rectVisibleArea = {
+                        fLeft: tank.fX - SharedSettings.CANVAS_WIDTH * 0.5,
+                        fBottom: tank.fY - SharedSettings.CANVAS_HEIGHT * 0.5,
+                        fRight: tank.fX + SharedSettings.CANVAS_WIDTH * 0.5,
+                        fTop: tank.fY + SharedSettings.CANVAS_HEIGHT * 0.5,
+                    };
+                    io.to(tank.strSocketID).emit('update',
+                        Array.from(world.setTank).filter((tank) => { return OverlapTester.overlapRects(rectVisibleArea, tank.rectBound); }),
+                        Array.from(world.setWall).filter((wall) => { return OverlapTester.overlapRects(rectVisibleArea, wall.rectBound); }),
+                        Array.from(world.setBullet).filter((bullet) => { return OverlapTester.overlapRects(rectVisibleArea, bullet.rectBound); }),
+                        iNanosecDiff );	// 個別送信
+                }
+            });
+
+            // プレーしていないソケットごとの処理
+            const rectVisibleArea = {
+                fLeft: SharedSettings.FIELD_WIDTH * 0.5 - SharedSettings.CANVAS_WIDTH * 0.5,
+                fBottom: SharedSettings.FIELD_HEIGHT * 0.5 - SharedSettings.CANVAS_HEIGHT * 0.5,
+                fRight: SharedSettings.FIELD_WIDTH * 0.5 + SharedSettings.CANVAS_WIDTH * 0.5,
+                fTop: SharedSettings.FIELD_HEIGHT * 0.5 + SharedSettings.CANVAS_HEIGHT * 0.5,
+            };
+            world.setNotPlayingSocketID.forEach((strSocketID) => {
+                io.to(strSocketID).emit('update',
+                    Array.from(world.setTank).filter((tank) => { return OverlapTester.overlapRects(rectVisibleArea, tank.rectBound); }),
+                    Array.from(world.setWall).filter((wall) => { return OverlapTester.overlapRects(rectVisibleArea, wall.rectBound); }),
+                    Array.from(world.setBullet).filter((bullet) => { return OverlapTester.overlapRects(rectVisibleArea, bullet.rectBound); } ),
+                    iNanosecDiff );	// 個別送信
+            });
 
         }, 1000 / GameSettings.FRAMERATE);	// 単位は[ms]。1000[ms] / FRAMERATE[回]
     }

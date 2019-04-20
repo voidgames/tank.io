@@ -18,6 +18,7 @@ module.exports = class World {
         this.setTank = new Set();	// タンクセット ※SetクラスはES6の機能
         this.setWall = new Set();	// 壁セット
         this.setBullet = new Set();	// 弾丸リスト
+        this.setNotPlayingSocketID = new Set(); // プレイしていない通信のソケットIDリスト
         // ランダムに壁を生成
         for(let i=0; i < GameSettings.WALL_COUNT; i++) {
             // ランダム座標値の作成
@@ -115,6 +116,8 @@ module.exports = class World {
 
     // タンクの生成
     createTank(strSocketID, strNickName) {
+        // ゲーム開始。プレイしていない通信のソケットIDリストから削除
+        this.setNotPlayingSocketID.delete(strSocketID);
         // タンクの可動域
         const rectTankField = {
             fLeft:   0 + SharedSettings.TANK_WIDTH  * 0.5,
@@ -150,6 +153,8 @@ module.exports = class World {
             },
             GameSettings.BOTTANK_WAIT_FOR_NEW_BOT);
         } else {
+            // ゲーム開始前に戻るので、プレイしていない通信のソケットIDリストに追加
+            this.setNotPlayingSocketID.add(tank.strSocketID);
             // 破棄タンクのクライアントにイベント'dead'を送信
             this.io.to(tank.strSocketID).emit('dead');
         }

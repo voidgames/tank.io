@@ -3,8 +3,11 @@ class SharedSettings {
     // フィールドサイズ
     // ※背景タイル画像のトリム処理未実装のため、
     // 　「FIELD_WIDTHは、FIELDTILE_WIDTHの定数倍」「FIELD_HEIGHTは、FIELDTILE_HEIGHTの定数倍」にする必要あり。
-    static get FIELD_WIDTH() { return 1024.0; }
-    static get FIELD_HEIGHT() { return 1024.0; }
+    static get FIELD_WIDTH() { return 2048.0; }
+    static get FIELD_HEIGHT() { return 2048.0; }
+    // キャンバスサイズ
+    static get CANVAS_WIDTH() { return 1000.0; }
+    static get CANVAS_HEIGHT() { return 1000.0; }
     // タンクサイズ
     static get TANK_WIDTH() { return 80.0; }
     static get TANK_HEIGHT() { return 80.0; }
