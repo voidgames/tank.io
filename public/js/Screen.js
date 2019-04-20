@@ -28,7 +28,7 @@ class Screen {
         // 接続確立
         this.socket.on('connect', () => {
             console.log('connect : socket.id = %s', socket.id);
-            this.socket.emit('enter-the-game');
+            // this.socket.emit('enter-the-game');
         });
         // サーバーからの定期更新通知
         this.socket.on('update', (aTank, aWall, aBullet, iProcessingTimeNanoSec) => {
@@ -36,6 +36,10 @@ class Screen {
             this.aWall = aWall;
             this.aBullet = aBullet;
             this.iProcessingTimeNanoSec = iProcessingTimeNanoSec;
+        });
+        // デッドしたらスタート画面に戻る
+        this.socket.on('dead', () => {
+            $('#start-screen').show();
         });
     }
 
@@ -160,6 +164,14 @@ class Screen {
                 fLifeCellWidth * ( tank.iLifeMax - tank.iLife ),
                 10 );
         }
+
+        // ニックネーム
+        this.context.save();
+        this.context.textAlign = 'center';
+        this.context.font = RenderingSettings.NICKNAME_FONT;
+        this.context.fillStyle = RenderingSettings.NICKNAME_COLOR;
+        this.context.fillText( tank.strNickName, 0, -50 );
+        this.context.restore();
 
         this.context.restore(); // translate前の状態をリストア
     }

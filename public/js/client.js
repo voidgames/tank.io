@@ -38,3 +38,11 @@ $(document).on('keydown keyup', (event) => {
         socket.emit('shoot');
     }
 });
+
+// スタートボタン
+$('#start-button').on('click', () => {
+    // サーバーに'enter-the-game'を送信
+    const objConfig = { strNickName: $('#nickname').val() };
+    socket.emit('enter-the-game', objConfig);
+    $('#start-screen').hide();
+});

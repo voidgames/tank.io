@@ -27,10 +27,10 @@ module.exports = class Game {
             });
 
             // クライアント側の接続確立時
-            socket.on('enter-the-game',　() =>　{
+            socket.on('enter-the-game', (objConfig) => {
                 console.log( 'enter-the-game : socket.id = %s', socket.id );
-                tank = world.createTank(socket.id); // 自タンク作成
-            } );
+                tank = world.createTank(socket.id, objConfig.strNickName); // 自タンク作成
+            });
 
             // クライアント側のキー（移動）入力時
             socket.on('change-my-movement', (objMovement) => {

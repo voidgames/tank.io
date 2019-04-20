@@ -6,14 +6,15 @@ const GameSettings = require('./GameSettings.js');
 const SharedSettings = require('../public/js/SharedSettings.js');
 
 module.exports = class Tank extends GameObject {
-    constructor(strSocketID, rectField, setWall) {
+    constructor(strSocketID, strNickName, rectField, setWall) {
         super( SharedSettings.TANK_WIDTH, SharedSettings.TANK_HEIGHT, 0.0, 0.0, Math.random() * 2 * Math.PI );
 
         this.strSocketID = strSocketID; // タンクID
-        this.objMovement = {};	// 動作コマンド
+        this.strNickName = strNickName; // 名前
+        this.objMovement = {};	        // 動作コマンド
         this.fSpeed = GameSettings.TANK_SPEED;    // 速度[m/s]。1frameあたり5進む => 1/30[s] で5進む => 1[s]で150進む。
         this.fRotationSpeed = GameSettings.TANK_ROTATION_SPEED;    // 回転速度[rad/s]。1frameあたり0.1進む => 1/30[s] で0.1進む => 1[s]で3[rad]進む。
-        this.iTimeLastShoot = 0;    // 最終ショット時刻
+        this.iTimeLastShoot = 0;        // 最終ショット時刻
         this.iLife = GameSettings.TANK_LIFE_MAX;    // タンクライフ
         this.iLifeMax = GameSettings.TANK_LIFE_MAX; // タンク最大ライフ
         this.iScore = 0;
@@ -28,6 +29,7 @@ module.exports = class Tank extends GameObject {
     toJSON() {
         return Object.assign(super.toJson(), {
             strSocketID: this.strSocketID,
+            strNickName: this.strNickName,
             iLife: this.iLife,
             iLifeMax: this.iLifeMax,
             iScore: this.iScore,

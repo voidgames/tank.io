@@ -100,7 +100,7 @@ module.exports = class World {
     }
 
     // タンクの生成
-    createTank(strSocketID) {
+    createTank(strSocketID, strNickName) {
         // タンクの可動域
         const rectTankField = {
             fLeft:   0 + SharedSettings.TANK_WIDTH  * 0.5,
@@ -108,7 +108,7 @@ module.exports = class World {
             fRight: SharedSettings.FIELD_WIDTH  - SharedSettings.TANK_WIDTH  * 0.5,
             fTop:   SharedSettings.FIELD_HEIGHT - SharedSettings.TANK_HEIGHT * 0.5
         };
-        const tank = new Tank(strSocketID, rectTankField, this.setWall);
+        const tank = new Tank(strSocketID, strNickName, rectTankField, this.setWall);
         this.setTank.add(tank);
         return tank;
     }
@@ -116,6 +116,8 @@ module.exports = class World {
     // タンクの破棄
     destroyTank(tank) {
         this.setTank.delete(tank);
+        // 削除タンクのクライアントにイベント'dead'を送信
+        this.io.to(tank.strSocketID).emit('dead');
     }
 
     // 弾丸の生成

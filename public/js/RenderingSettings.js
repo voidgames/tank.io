@@ -15,4 +15,7 @@ class RenderingSettings {
     // スコア
     static get SCORE_FONT() { return '30px Bold Arial'; }
     static get SCORE_COLOR() { return 'black'; };
+    // ニックネーム
+    static get NICKNAME_FONT() { return '30px Bold Arial'; }
+    static get NICKNAME_COLOR() { return 'blue'; }
 }
