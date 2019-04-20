@@ -1,7 +1,7 @@
-# Climb.io
+# tank.io
 
 NodeJS project for any multiplayer games.
-This is based on  https://github.com/huytd/node-online-game-template
+This is based on  https://www.hiramine.com/programming/onlinebattletanks_nodejs_socketio/index.html
 
 ## License
 
