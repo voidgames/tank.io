@@ -6,6 +6,7 @@
 const Tank = require('./Tank.js');
 const Wall = require('./Wall.js');
 const OverlapTester = require('./OverlapTester.js');
+const BotTank = require('./BotTank.js');
 
 const SharedSettings = require('../public/js/SharedSettings.js');
 const GameSettings = require('./GameSettings.js');
@@ -27,6 +28,10 @@ module.exports = class World {
                                   fY_bottom + SharedSettings.WALL_HEIGHT * 0.5 );
             // 壁リストへの登録
             this.setWall.add(wall);
+        }
+        // ボットの生成
+        for(let i = 0; i < GameSettings.BOTTANK_COUNT; i++) {
+            this.createBotTank('Bot' + (i + 1));
         }
     }
 
@@ -96,7 +101,16 @@ module.exports = class World {
     }
 
     // 新たな行動
-    doNewActions( fDeltaTime ) {
+    doNewActions(fDeltaTime) {
+        this.setTank.forEach((tank) => {
+            // ボットは、新たな弾丸を打つかも
+            if(tank.isBot) {
+                // 1秒でN発の発射確率で発射する。（N = GameSettings.BOTTANK_SHOOT_PROBABILITY_PER_SEC）
+                if(GameSettings.BOTTANK_SHOOT_PROBABILITY_PER_SEC * fDeltaTime > Math.random()) {
+                    this.createBullet(tank);
+                }
+            }
+        });
     }
 
     // タンクの生成
@@ -113,11 +127,32 @@ module.exports = class World {
         return tank;
     }
 
+    // ボットタンクの生成
+    createBotTank(strNickName) {
+        // タンクの可動域
+        const rectTankField = {
+            fLeft: 0 + SharedSettings.TANK_WIDTH * 0.5,
+            fBottom: 0 + SharedSettings.TANK_HEIGHT * 0.5,
+            fRight: SharedSettings.FIELD_WIDTH - SharedSettings.TANK_WIDTH * 0.5,
+            fTop: SharedSettings.FIELD_HEIGHT - SharedSettings.TANK_HEIGHT * 0.5
+        };
+        const tank = new BotTank(strNickName, rectTankField, this.setWall);
+        this.setTank.add(tank);
+    }
+
     // タンクの破棄
     destroyTank(tank) {
         this.setTank.delete(tank);
-        // 削除タンクのクライアントにイベント'dead'を送信
-        this.io.to(tank.strSocketID).emit('dead');
+        // 破棄タンクがボットなら、一定時間後に、新たなボット生成
+        if(tank.isBot) {
+            setTimeout(() => {
+                this.createBotTank(tank.strNickName);
+            },
+            GameSettings.BOTTANK_WAIT_FOR_NEW_BOT);
+        } else {
+            // 破棄タンクのクライアントにイベント'dead'を送信
+            this.io.to(tank.strSocketID).emit('dead');
+        }
     }
 
     // 弾丸の生成
